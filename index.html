@@ -12,14 +12,22 @@
 <body>
 
 <canvas id="mainCanvas" width="480" height="320"></canvas>
-
+<div>speed: <span id="speedSpand"></span> mph</div>
 <script>
   var canvas = document.getElementById("mainCanvas");
   var ctx = canvas.getContext("2d");
   
   var x = canvas.width/2;
   var y = canvas.height/2;
-  
+  var speed = 0;
+  var maxSpeed = 0.5;
+  var ds = 0.01;
+
+  var rightPressed = false;
+  var leftPressed = false;
+  var upPressed = false;
+  var downPressed = false;
+
   var dx = 2;
   var dy = -2;
 
@@ -29,6 +37,43 @@
 
   var boatX = x + boatWidth/2;
   var boatY = y + boatlength/2;
+
+  document.addEventListener("keydown", keyDownHandler, false);
+  document.addEventListener("keyup", keyUpHandler, false);
+
+function keyDownHandler(e) {
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPressed = true;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPressed = true;
+    }
+    else if(e.key == "Up" || e.key == "ArrowUp") {
+      upPressed = true;
+      downPressed = false;
+    }
+    else if(e.key == "Down" || e.key == "ArrowDown") {
+      downPressed = true;
+      upPressed = false;
+    }
+}
+
+function keyUpHandler(e) {
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPressed = false;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPressed = false;
+    }
+    else if(e.key == "Up" || e.key == "ArrowUp") {
+      upPressed = false;
+      downPressed = false;
+    }
+    else if(e.key == "Down" || e.key == "ArrowDown") {
+      downPressed = false;
+      upPressed = false;
+    }
+}
 
 function drawBoat() {
     ctx.beginPath();
@@ -41,20 +86,27 @@ function drawBoat() {
     ctx.closePath();
 }
 function draw() {
+  document.getElementById("speedSpand").innerHTML = Math.round(speed*10);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBoat();
     
     if(y + dy > canvas.height-boatlength || y + dy < 0) {
-      boatRotationDegree = 20;
-      dy = -dy/2;
+      dy = 0;
     }
     
     if(x + dx > canvas.width-boatWidth || x + dx < 0) {
-      dx = -dx/2;
+      //dx = 0;
     }
-    drawBoat();
-    boatRotationDegree = 0;
-    x += dx;
-    y += dy;
+
+    if(upPressed && speed + ds < maxSpeed) {
+      speed += ds;
+    } 
+    else if(downPressed && speed - ds > (-1 * maxSpeed)) {
+      speed -= ds;
+    }
+
+    //x += speed*dx;
+    y += speed*dy;
   }
 
 setInterval(draw, 10);
