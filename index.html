@@ -17,8 +17,6 @@
   var canvas = document.getElementById("mainCanvas");
   var ctx = canvas.getContext("2d");
   
-  var x = canvas.width/2;
-  var y = canvas.height/2;
   var speed = 0;
   var maxSpeed = 0.5;
   var ds = 0.01;
@@ -28,6 +26,8 @@
   var upPressed = false;
   var downPressed = false;
 
+  var riverWidth = 20;
+
   var dx = 2;
   var dy = -2;
 
@@ -35,8 +35,12 @@
   var boatlength = 30;
   var boatRotationDegree = 0;
 
-  var boatX = x + boatWidth/2;
-  var boatY = y + boatlength/2;
+  var x = canvas.width/2;
+  var y = canvas.height - boatlength;
+  
+  var riverY = canvas.height;
+  var trees = [];
+  var frameNo = 0;
 
   document.addEventListener("keydown", keyDownHandler, false);
   document.addEventListener("keyup", keyUpHandler, false);
@@ -67,35 +71,94 @@ function keyUpHandler(e) {
     }
     else if(e.key == "Up" || e.key == "ArrowUp") {
       upPressed = false;
-      downPressed = false;
     }
     else if(e.key == "Down" || e.key == "ArrowDown") {
       downPressed = false;
-      upPressed = false;
     }
 }
 
 function drawBoat() {
     ctx.beginPath();
-    ctx.translate(boatX, boatY);
+    ctx.translate(x, y);
     ctx.rotate(boatRotationDegree * Math.PI / 180);
-    ctx.translate(-1*boatX, -1*boatY);
+    ctx.translate(-1*x, -1*y);
     ctx.rect(x, y, boatWidth, boatlength);
     ctx.fillStyle = "#0095DD";
     ctx.fill();
     ctx.closePath();
 }
+
+function drawRiver(){
+  ctx.beginPath();
+  ctx.moveTo(x+riverWidth+boatWidth/2, 0);
+  ctx.lineTo(x+riverWidth+boatWidth/2, riverY);
+  
+  ctx.moveTo(x-riverWidth, 0);
+  ctx.lineTo(x-riverWidth, riverY);
+  ctx.stroke();
+
+  var interval = Math.floor(Math.random() * Math.floor(300)+ 150);
+
+
+  if(frameNo ==0 || everyinterval(interval))
+  {
+    var treeX = Math.floor(Math.random() * Math.floor(x-riverWidth-50));
+    var r = Math.floor(Math.random() * Math.floor(20));
+    trees.push(new tree(treeX, 0, r));
+  }
+
+  for(i=0; i<trees.length; i+=1){
+    trees[i].y +=speed*dx;
+    trees[i].draw();
+  }
+}
+
+function tree(x,y,r){
+  this.x = x;
+  this.y = y;
+
+  this.draw = function(){
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = "#32CD32";
+    ctx.strokeStyle = "#32CD32";
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
 function draw() {
+  frameNo +=1;
   document.getElementById("speedSpand").innerHTML = Math.round(speed*10);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBoat();
     
-    if(y + dy > canvas.height-boatlength || y + dy < 0) {
+    correctSpeedAndRotation();  
+    drawBoat();
+    drawRiver();
+    clearSpeed();
+  }
+
+function clearSpeed(){
+  boatRotationDegree = 0;
+}
+
+function correctSpeedAndRotation(){
+  if(y + dy > canvas.height-boatlength || y + dy < 0) {
       dy = 0;
     }
     
     if(x + dx > canvas.width-boatWidth || x + dx < 0) {
       //dx = 0;
+    }
+
+    if(rightPressed && speed>0)
+    {
+      boatRotationDegree -=0.1;
+    }
+
+    if(leftPressed  && speed>0)
+    { 
+      boatRotationDegree +=0.1;
     }
 
     if(upPressed && speed + ds < maxSpeed) {
@@ -107,7 +170,15 @@ function draw() {
 
     //x += speed*dx;
     y += speed*dy;
-  }
+    riverY -= speed*dy;
+}
+
+
+function everyinterval(n) {
+    if ((frameNo / n) % 1 == 0) {return true;}
+    return false;
+}
+
 
 setInterval(draw, 10);
 
